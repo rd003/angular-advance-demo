@@ -14,22 +14,40 @@ describe('AppComponent', () => {
     }).compileComponents();
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
+  // it('should create the app', () => {
+  //   const fixture = TestBed.createComponent(AppComponent);
+  //   const app = fixture.componentInstance;
+  //   expect(app).toBeTruthy();
+  // });
+
+  it('should create the app',()=>{
+    const fixture=TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
+  })
+  it('should set the title property', () => {
+    const app = new AppComponent();
+    expect(app.title).toEqual('hi');
   });
-
-  it(`should have as title 'angular-advance-demo'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('angular-advance-demo');
-  });
-
-  it('should render title', () => {
+  
+  it('should render the title in a div with the class "title"', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('angular-advance-demo app is running!');
+    const title = fixture.nativeElement.querySelector('.title');
+    expect(title).toBeDefined();
+    expect(title.textContent.trim()).toEqual('hi');
   });
+  
+  it('should include a router-outlet element', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const routerOutlet = fixture.nativeElement.querySelector('router-outlet');
+    expect(routerOutlet).toBeDefined();
+  });
+  
+  
+  
+  
+  
+  
 });
