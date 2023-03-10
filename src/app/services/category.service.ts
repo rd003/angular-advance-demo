@@ -11,9 +11,14 @@ export class CategoryService {
   private apiUrl="http://localhost:3000/categories";
   private categorySubject:BehaviorSubject<Category[]> = new BehaviorSubject<Category[]>([]);
 
-  fetchCategories(){
+  private fetchCategories():Observable<Category[]>{
     return this.http.get<Category[]>(this.apiUrl).pipe(
-      tap(categories=>this.categorySubject.next(categories))
+      tap(categories=>
+        {
+          console.log(categories);
+          return this.categorySubject.next(categories);
+        }
+        )
     );
   }
 

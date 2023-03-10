@@ -6,6 +6,7 @@ import { Component } from '@angular/core';
     <div class="title">
       {{title}}
     </div>
+    <app-category></app-category>
     <router-outlet></router-outlet>
   `,
   styles: []
