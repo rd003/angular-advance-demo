@@ -6,17 +6,25 @@ import { Category } from 'src/models/category.model';
 @Component({
   selector: 'app-category',
   template: `
+    <div class="container">
     <h3>Categories</h3>
     <ng-container *ngIf="categories$|async as categories">
-     <div>
-       <ul>
-        <li *ngFor="let category of categories">
-           {{category.id}} | 
-           {{category.name}}
-        </li>
-       </ul>
-     </div>
+      <table class="table table-bordered table-striped my-2">
+        <thead>
+          <tr>
+             <th>Id</th>
+             <th>Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let category of categories">
+              <td>{{category.id}}</td>
+              <td>{{category.name}}</td>
+          </tr>
+        </tbody>
+      </table>
     </ng-container>
+    </div>
   `,
   styles: [
   ]
@@ -28,7 +36,11 @@ export class CategoryComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.categories$=this.categoryService.getCategories().pipe(map(resp=>resp.categories));
+    this.categories$=this.categoryService
+                     .getCategories()
+                     .pipe(map(resp=>resp.categories));
   }
-  
+
+
+
 }

@@ -2,7 +2,35 @@
   "categories": [
     {
       "id": "1",
-      "name": "category1"
+      "name": "shirt"
+    },
+    {
+      "id": "2",
+      "name": "pant"
+    },
+    {
+      "id": "3",
+      "name": "shoes"
+    },
+    {
+      "id": "4",
+      "name": "accessories"
+    },
+    {
+      "id": "5",
+      "name": "slippers"
+    },
+    {
+      "id": "6",
+      "name": "speakers"
+    },
+    {
+      "id": "7",
+      "name": "periferrals"
+    },
+    {
+      "id": "8",
+      "name": "laptop"
     }
   ],
   "products": [

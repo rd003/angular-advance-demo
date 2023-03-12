@@ -21,13 +21,12 @@ export class CategoryService {
                   .set('_page',page.toString())
                   .set('_limit',limit.toString())
     if(searchTerm){
-      params=params.set('name',searchTerm)
+      params=params.set('q',searchTerm)
     }
     const url= `${this.apiUrl}?${params.toString()}`;
    return this.http.get(url,{observe:'response'})
            .pipe(
             map(response=> {
-              console.info(response)
               const count= parseInt(response.headers.get('X-Total-Count')||"0",10);
               const categories= response.body as Category[]
               return {count,categories} as CategoryResponse;
