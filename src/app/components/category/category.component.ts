@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 import { CategoryService } from 'src/app/services/category.service';
 import { Category } from 'src/models/category.model';
 
@@ -7,7 +7,6 @@ import { Category } from 'src/models/category.model';
   selector: 'app-category',
   template: `
     <h3>Categories</h3>
-{{categories$|async|json}}
     <ng-container *ngIf="categories$|async as categories">
      <div>
        <ul>
@@ -24,9 +23,12 @@ import { Category } from 'src/models/category.model';
 })
 export class CategoryComponent implements OnInit {
   categories$!:Observable<Category[]>;
+
   constructor(private categoryService:CategoryService){
   }
+
   ngOnInit(): void {
-    this.categories$=this.categoryService.getCategories();
+    this.categories$=this.categoryService.getCategories().pipe(map(resp=>resp.categories));
   }
+  
 }

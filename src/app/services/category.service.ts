@@ -1,7 +1,12 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 import { Category } from 'src/models/category.model';
+
+export interface CategoryResponse{
+  categories:Category[],
+  count:number
+}
 
 @Injectable({
   providedIn: 'root'
@@ -9,66 +14,44 @@ import { Category } from 'src/models/category.model';
 export class CategoryService {
 
   private apiUrl="http://localhost:3000/categories";
-  private categorySubject:BehaviorSubject<Category[]> = new BehaviorSubject<Category[]>([]);
 
-  private fetchCategories():Observable<Category[]>{
-    return this.http.get<Category[]>(this.apiUrl).pipe(
-      tap(categories=>
-        {
-          console.log(categories);
-          return this.categorySubject.next(categories);
-        }
-        )
-    );
-  }
-
-  getCategories():Observable<Category[]>{
-    if(this.categorySubject.getValue().length===0){
-      this.fetchCategories();
+  getCategories(page=1,limit=10,searchTerm=''):Observable<CategoryResponse>{
+    // const url = `${this.apiUrl}?_page=${page}&_limit=${limit}&name=${searchTerm}`;
+    let params= new HttpParams()
+                  .set('_page',page.toString())
+                  .set('_limit',limit.toString())
+    if(searchTerm){
+      params=params.set('name',searchTerm)
     }
-    return this.categorySubject.asObservable();
+    const url= `${this.apiUrl}?${params.toString()}`;
+   return this.http.get(url,{observe:'response'})
+           .pipe(
+            map(response=> {
+              console.info(response)
+              const count= parseInt(response.headers.get('X-Total-Count')||"0",10);
+              const categories= response.body as Category[]
+              return {count,categories} as CategoryResponse;
+            })
+           )
   }
+
 
   getCategoryById(id:string){
     return this.http.get<Category>(`${this.apiUrl}/${id}`);
   }
 
-
   addCategory(category:Category):Observable<Category>{
-    return this.http.post<Category>(this.apiUrl,category).pipe(
-      tap(category=>{
-        const categories=this.categorySubject.getValue();
-        categories.push(category);
-        this.categorySubject.next(categories);
-      })
-    )
+    return this.http.post<Category>(this.apiUrl,category);
   }
 
   updateCategory(id:string,category:Category):Observable<Category>{
-    return this.http.put<Category>(`${this.apiUrl}/${id}`,category).pipe(
-      tap(category=>{
-        const categories= this.categorySubject.getValue();
-        const index= categories.findIndex(a=>a.id==category.id);
-        if(index!==-1){
-          categories[index]=category;
-          this.categorySubject.next(categories);
-        }
-      })
-    )
+    return this.http.put<Category>(`${this.apiUrl}/${id}`,category);
   }
 
   deleteCategory(id:string){
-    return this.http.delete<never>(`${this.apiUrl}/${id}`).pipe(
-      tap(_=>{
-         const categories= this.categorySubject.getValue();
-         const index= categories.findIndex(a=>a.id==id);
-         if(index!==-1){
-          categories.splice(index,1);
-          this.categorySubject.next(categories); 
-         }
-      })
-    )
+    return this.http.delete<never>(`${this.apiUrl}/${id}`);
   }
 
-  constructor(private http:HttpClient) { }
+  constructor(private http:HttpClient) { 
+  }
 }
