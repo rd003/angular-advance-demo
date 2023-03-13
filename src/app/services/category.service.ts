@@ -14,7 +14,6 @@ export interface Pagination{
 
 export interface CategoryState{
   categories:Category[],
-  totalRecords:number,
   pagination:Pagination,
   searchCriteria:string,
   loading:boolean
@@ -23,10 +22,9 @@ export interface CategoryState{
 let _state:CategoryState={
   categories:[],
   searchCriteria:'',
-  totalRecords:0,
   loading:false,
   pagination:{
-    currentPage:0,
+    currentPage:1,
     selectedPageSize:5,
     totalPages:0,
     totalRecords:0,
@@ -61,9 +59,9 @@ export class CategoryService {
     map(state=>state.loading)
   )
 
-  totalRecords$=this.state$.pipe(
-    map(state=>state.totalRecords)
-  )
+  // totalRecords$=this.state$.pipe(
+  //   map(state=>state.totalRecords)
+  // )
 
   /**
    * Viewmodel that resolves once all the data is ready (or updated)...
@@ -73,11 +71,10 @@ export class CategoryService {
     combineLatestWith(
       this.searchCriteria$,
       this.categories$,
-      this.loading$,
-      this.totalRecords$
+      this.loading$
     ),
-    map(([pagination,searchCriteria,categories,loading,totalRecords])=>
-    ({pagination,searchCriteria,categories,loading,totalRecords}) //array destructuring
+    map(([pagination,searchCriteria,categories,loading])=>
+    ({pagination,searchCriteria,categories,loading}) //array destructuring
   ));
 
   
@@ -94,7 +91,10 @@ export class CategoryService {
             map(response=> {
               const totalRecords= parseInt(response.headers.get('X-Total-Count')||"0",10);
               const categories= response.body as Category[];
-              this.updateState({..._state,totalRecords})
+              const selectedPageSize=_state.pagination.selectedPageSize;
+              const totalPages= Math.ceil(totalRecords/selectedPageSize);
+              const pagination = {..._state.pagination,totalPages,totalRecords}
+              //this.updateState({..._state,pagination})
               return categories;
             }),
             map( filterWithCriteria(searchCriteria))
@@ -111,7 +111,8 @@ export class CategoryService {
       combineLatestWith(this.pagination$),
       switchMap(([searchCriteria,pagingation])=>{
         return this.getCategories(searchCriteria,pagingation)
-      }))
+      })
+      )
       .subscribe(categories=>{
       this.updateState({..._state,categories,loading:false})
     })
@@ -146,7 +147,7 @@ export class CategoryService {
 
   }
 
-  updatePagination(selectedSize: number, currentPage: number = 0) {
+  updatePagination(selectedSize: number, currentPage: number = 1) {
     const pagination = { ..._state.pagination, currentPage, selectedSize };
     this.updateState({ ..._state, pagination, loading: true });
   }
@@ -171,6 +172,7 @@ export class CategoryService {
   }
 
   private updateState(state:CategoryState){
+    console.log(state);
     _state=state;
      this.store.next(_state);
   }
@@ -202,11 +204,3 @@ function filterWithCriteria(searchCriteria: string) {
     return filteredCategories;
   };
 }
-
-
-
-
-
-
-    
-   
