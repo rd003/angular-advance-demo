@@ -1,12 +1,11 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { BehaviorSubject, combineLatestWith, debounceTime, distinctUntilChanged, map, Observable, pipe, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, combineLatestWith, debounceTime, distinctUntilChanged, map, Observable, pipe, switchMap } from 'rxjs';
 import { Category } from 'src/models/category.model';
 
 export interface Pagination{
   currentPage:number;
-  totalRecords:number;
   totalPages:number;
   selectedPageSize:number;
   pageSizes:number[];
@@ -14,6 +13,7 @@ export interface Pagination{
 
 export interface CategoryState{
   categories:Category[],
+  totalRecords:number;
   pagination:Pagination,
   searchCriteria:string,
   loading:boolean
@@ -21,13 +21,13 @@ export interface CategoryState{
 
 let _state:CategoryState={
   categories:[],
+  totalRecords:0,
   searchCriteria:'',
   loading:false,
   pagination:{
     currentPage:1,
     selectedPageSize:5,
     totalPages:0,
-    totalRecords:0,
     pageSizes:[5,10,15,20]
   }
 }
@@ -50,6 +50,7 @@ export class CategoryService {
       map(state=>state.pagination),
       distinctUntilChanged()
       );
+
   searchCriteria$=this.store.pipe(
         map(state=>state.searchCriteria),
         distinctUntilChanged()
@@ -59,9 +60,11 @@ export class CategoryService {
     map(state=>state.loading)
   )
 
-  // totalRecords$=this.state$.pipe(
-  //   map(state=>state.totalRecords)
-  // )
+  totalRecords$= this.state$.pipe(
+    map(state=>state.totalRecords)
+  )
+
+
 
   /**
    * Viewmodel that resolves once all the data is ready (or updated)...
@@ -71,10 +74,11 @@ export class CategoryService {
     combineLatestWith(
       this.searchCriteria$,
       this.categories$,
-      this.loading$
+      this.totalRecords$,
+      this.loading$,
     ),
-    map(([pagination,searchCriteria,categories,loading])=>
-    ({pagination,searchCriteria,categories,loading}) //array destructuring
+    map(([pagination,searchCriteria,categories,totalRecords,loading])=>
+    ({pagination,searchCriteria,categories,totalRecords,loading}) //array destructuring
   ));
 
   
@@ -91,13 +95,14 @@ export class CategoryService {
             map(response=> {
               const totalRecords= parseInt(response.headers.get('X-Total-Count')||"0",10);
               const categories= response.body as Category[];
-              const selectedPageSize=_state.pagination.selectedPageSize;
-              const totalPages= Math.ceil(totalRecords/selectedPageSize);
-              const pagination = {..._state.pagination,totalPages,totalRecords}
-              //this.updateState({..._state,pagination})
-              return categories;
+            
+              return {totalRecords,categories};
             }),
-            map( filterWithCriteria(searchCriteria))
+            map((response)=>{
+              this.updateState({..._state,totalRecords:response.totalRecords})
+              return response;
+            }),
+            map(response=> filterWithCriteria(searchCriteria)(response.categories))
            )
   }
   
@@ -116,6 +121,7 @@ export class CategoryService {
       .subscribe(categories=>{
       this.updateState({..._state,categories,loading:false})
     })
+
   }
 
   /**
@@ -147,8 +153,11 @@ export class CategoryService {
 
   }
 
-  updatePagination(selectedSize: number, currentPage: number = 1) {
-    const pagination = { ..._state.pagination, currentPage, selectedSize };
+  updatePagination(selectedSize: number=5, currentPage: number = 1) {
+    const selectedPageSize=_state.pagination.selectedPageSize;
+    const totalPages= Math.ceil(_state.totalRecords/selectedPageSize);
+   // const pagination = {..._state.pagination,totalPages,totalRecords}
+    const pagination = { ..._state.pagination,totalPages, currentPage, selectedSize };
     this.updateState({ ..._state, pagination, loading: true });
   }
 
