@@ -2,33 +2,8 @@ import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { catchError, combineLatestWith, debounceTime, map, Observable, of, startWith, switchMap, tap } from 'rxjs';
 import { CategoryService } from 'src/app/services/category.service';
-import { Category } from 'src/models/category.model';
 
-interface PageModel{
-  totalPages: number[],
-  page: number,
-  pageLimit:number
-}
-interface CategoryVm{
-  categories: Category[],
-  loading: boolean,
-  error: any | null,
-  pageModel:PageModel
-}
 
-let _state: CategoryVm = {
-  categories: [],
-  loading: true,
-  error: null,
-  pageModel: {
-    totalPages: [],
-    page: 1,
-    pageLimit:5
-  }
-}
-const _updateState=(state:CategoryVm) =>{
-  _state = { ...state };
-}
 
 @Component({
   selector: 'app-category',
@@ -45,11 +20,12 @@ const _updateState=(state:CategoryVm) =>{
           {{category.name}}
         </li>
       </ul>
-      <ul>
+      
+      <!-- <ul>
         <li *ngFor="let page of vm.pageModel.totalPages">
           <a style="cursor:pointer" (click)="selectPage(page)">{{page}}</a>
         </li>
-      </ul>
+      </ul> -->
 
       </ng-container>
 
@@ -101,29 +77,16 @@ export class CategoryComponent implements OnInit {
     );
   };
   
-  selectPage(page: number) {
-    const newState = {
-      ..._state, pageModel: {
-        ..._state.pageModel, page
-      }
-    };
-    console.log(newState.pageModel.page)
-    _updateState(newState);
-  }
+  // selectPage(page: number) {
+  //   const newState = {
+  //     ..._state, pageModel: {
+  //       ..._state.pageModel, page
+  //     }
+  //   };
+  //   console.log(newState.pageModel.page)
+  //   _updateState(newState);
+  // }
 
-  private mapCategoriesResponse(categoriesResponse: {categories:Category[],totalRecords:number}) {
-    const totalRecords = categoriesResponse.totalRecords;
-    const pages = Math.ceil(totalRecords / _state.pageModel.pageLimit);
-    const totalPages = Array(pages).fill(0).map((x, i) => i + 1);
-    const newState = {
-      ..._state, loading: false, categories: categoriesResponse.categories, pageModel:
-      {
-        ..._state.pageModel,
-        totalPages
-      }
-    };
-    return newState;
-  }
 
   constructor(private _categoryService:CategoryService) {
 

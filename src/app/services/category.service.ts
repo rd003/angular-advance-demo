@@ -1,7 +1,32 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { delay, map, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, delay, map, Observable, throwError } from 'rxjs';
 import { Category } from 'src/models/category.model';
+
+interface PageModel{
+  totalPages: number[],
+  page: number,
+  pageLimit:number
+}
+interface CategoryVm{
+  categories: Category[],
+  loading: boolean,
+  error: any | null,
+  pageModel:PageModel
+}
+
+let _state: CategoryVm = {
+  categories: [],
+  loading: true,
+  error: null,
+  pageModel: {
+    totalPages: [],
+    page: 1,
+    pageLimit:5
+  }
+}
+
+
 
 @Injectable({
   providedIn: 'root'
@@ -9,8 +34,10 @@ import { Category } from 'src/models/category.model';
 export class CategoryService {
 
   private apiUrl = "http://localhost:3000/categories";
+  private categoryState: BehaviorSubject<CategoryVm> = new BehaviorSubject(_state);
+  private state$ = this.categoryState.asObservable();
 
-  public getCategories(searchCriteria: string, currentPage = 1, pageLimit = 5): Observable<{categories:Category[],totalRecords:number
+  private getCategories(searchCriteria: string, currentPage = 1, pageLimit = 5): Observable<{categories:Category[],totalRecords:number
 }>{
     const url = this.buildCategoryUrl(searchCriteria, currentPage, pageLimit);
     return this.http.get(url,{observe:'response'})
@@ -43,5 +70,23 @@ export class CategoryService {
     return url;
   }
   
+}
+
+const _updateState=(state:CategoryVm) =>{
+  _state = { ...state };
+}
+
+ const mapCategoriesResponse=(categoriesResponse: {categories:Category[],totalRecords:number})=>{
+  const totalRecords = categoriesResponse.totalRecords;
+  const pages = Math.ceil(totalRecords / _state.pageModel.pageLimit);
+  const totalPages = Array(pages).fill(0).map((x, i) => i + 1);
+  const newState = {
+    ..._state, loading: false, categories: categoriesResponse.categories, pageModel:
+    {
+      ..._state.pageModel,
+      totalPages
+    }
+  };
+  return newState;
 }
 
