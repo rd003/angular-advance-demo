@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { catchError, combineLatestWith, debounceTime, map, Observable, of, startWith, switchMap, tap } from 'rxjs';
-import { CategoryService } from 'src/app/services/category.service';
+import { CategoryService, CategoryVm } from 'src/app/services/category.service';
 
 
 
@@ -9,6 +9,7 @@ import { CategoryService } from 'src/app/services/category.service';
   selector: 'app-category',
   template: `
     <h2>Categories</h2>
+    {{vm$|async|json}}
     <div class="mx-2">
       <input type="text" [formControl]="searchTerm"/>
     </div>
@@ -51,31 +52,9 @@ export class CategoryComponent implements OnInit {
     const searchTerm$: Observable<any> = this.searchTerm.valueChanges.pipe(
       startWith(''),
       debounceTime(400));
-    // const xy = this._categoryService.getCategories("").pipe(
-    //   combineLatestWith(searchTerm$),
-    //   map([categoriesResponse, searchTerm])=> (
-         
-    //   )
-    // )
     
-    this.vm$ = searchTerm$.pipe( 
-      switchMap(sTerm => {
-        return this._categoryService.getCategories(sTerm).pipe(
-          map(categoriesResponse => {
-            const newState = this.mapCategoriesResponse(categoriesResponse);
-            _updateState(newState);
-            return newState;
-          }),
-          catchError(error => {
-            const newState:CategoryVm={ ..._state,error:error}
-            _updateState(newState);
-            return of(newState);
-          }),
-          startWith(_state)
-        )
-      })
-    );
-  };
+    this.vm$ = this.vm$;
+  }
   
   // selectPage(page: number) {
   //   const newState = {
