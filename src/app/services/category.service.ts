@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, combineLatestWith, delay, distinctUntilChanged, map, Observable, of, startWith, switchMap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatestWith, delay, distinctUntilChanged, map, Observable, of, startWith, switchMap, tap, throwError } from 'rxjs';
 import { Category } from 'src/models/category.model';
 
 export interface pagination{
@@ -46,13 +46,13 @@ export class CategoryService {
   private loading$ = this.state$.pipe(map(
     x => x.loading
   ),
-    distinctUntilChanged()
+  distinctUntilChanged()
   );
 
   private error$ = this.state$.pipe(map(
     x => x.error
   ),
-    distinctUntilChanged()
+  distinctUntilChanged()
   );
 
   private searchCriteria$ = this.state$.pipe(
@@ -65,7 +65,7 @@ export class CategoryService {
   private pagination$ = this.state$.pipe(map(
     x => x.pagination
   ),
-    distinctUntilChanged()
+  distinctUntilChanged()
   );
 
   private vm$ = this.categories$.pipe(
@@ -83,6 +83,9 @@ export class CategoryService {
   constructor(private http:HttpClient) { 
     this.searchCriteria$.pipe(
       combineLatestWith(this.pagination$),
+      distinctUntilChanged(([prevSearch, prevPage], [newSearch, newPage]) =>
+        prevSearch === newSearch || (prevPage.page === newPage.page && prevPage.pageLimit === newPage.pageLimit && prevPage.totalPages===prevPage.totalPages) 
+      ),
       switchMap(([searchCriteria, pagintation]) => (
         this.getCategories(searchCriteria, pagintation).pipe(
           map(categoriesResponse => {
@@ -132,7 +135,6 @@ export class CategoryService {
     if(searchCriteria){
       params=params.set('q',searchCriteria)
     }
-    
     const url= `${this.apiUrl}?${params.toString()}`;
     return url;
   }
@@ -141,8 +143,11 @@ export class CategoryService {
     const totalRecords = categoriesResponse.totalRecords;
     const pages = Math.ceil(totalRecords / _state.pagination.pageLimit);
     const totalPages = Array(pages).fill(0).map((x, i) => i + 1);
+    // if i udpate the state with pagination, i am getting error
     const newState = {
-      ..._state, loading: false, categories: categoriesResponse.categories
+        ..._state, loading: false, categories: categoriesResponse.categories, pagination: {
+        ..._state.pagination,totalPages
+      }
     };
     return newState;
   }

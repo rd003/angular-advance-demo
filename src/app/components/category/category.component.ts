@@ -22,11 +22,11 @@ import { CategoryService, CategoryVm } from 'src/app/services/category.service';
         </li>
       </ul>
       
-      <!-- <ul>
-        <li *ngFor="let page of vm.pageModel.totalPages">
+      <ul>
+        <li *ngFor="let page of vm.pagination.totalPages">
           <a style="cursor:pointer" (click)="selectPage(page)">{{page}}</a>
         </li>
-      </ul> -->
+      </ul>
 
       </ng-container>
 
@@ -56,15 +56,9 @@ export class CategoryComponent implements OnInit {
     this.vm$ = this._categoryService.state$;
   }
   
-  // selectPage(page: number) {
-  //   const newState = {
-  //     ..._state, pageModel: {
-  //       ..._state.pageModel, page
-  //     }
-  //   };
-  //   console.log(newState.pageModel.page)
-  //   _updateState(newState);
-  // }
+  selectPage(page: number) {
+   
+  }
 
 
   constructor(private _categoryService:CategoryService) {
