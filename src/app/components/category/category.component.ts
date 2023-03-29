@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { catchError, combineLatestWith, debounceTime, map, Observable, of, startWith, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatestWith, debounceTime, map, NEVER, Observable, of, startWith, switchMap, tap } from 'rxjs';
 import { CategoryService, CategoryVm } from 'src/app/services/category.service';
 
 
@@ -46,18 +46,31 @@ import { CategoryService, CategoryVm } from 'src/app/services/category.service';
   
 export class CategoryComponent implements OnInit {
   vm$!: Observable<CategoryVm>;
+  page$ = new BehaviorSubject<number>(1);
   searchTerm = new FormControl();
   
   ngOnInit(): void {
-    const searchTerm$: Observable<any> = this.searchTerm.valueChanges.pipe(
+    const searchCriteria$ = this.searchTerm.valueChanges.pipe(
       startWith(''),
-      debounceTime(400));
+      tap(console.log),
+      debounceTime(400)
+    )
     
     this.vm$ = this._categoryService.state$;
+
+    searchCriteria$.pipe(
+      combineLatestWith(
+        this.vm$
+      ),
+      switchMap(([searchCriteria, vm]) => {
+        this._categoryService.updateSearchCriteria(searchCriteria)
+        return NEVER
+      })
+    )
   }
   
   selectPage(page: number) {
-   
+    this.page$.next(page);
   }
 
 

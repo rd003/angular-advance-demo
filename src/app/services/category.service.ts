@@ -80,6 +80,17 @@ export class CategoryService {
     )
     ));
   
+  // public methods
+  updateSearchCriteria(searchCriteria: string) {
+    this._updateState({..._state,searchCriteria})
+  }
+
+  updatePage(page: number) {
+    this._updateState({..._state,pagination:{..._state.pagination,page}})
+  }
+  
+  //http call
+  
   constructor(private http:HttpClient) { 
     this.searchCriteria$.pipe(
       combineLatestWith(this.pagination$),
