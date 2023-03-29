@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, catchError, combineLatestWith, delay, distinctUntilChanged, map, Observable, of, startWith, switchMap, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatestWith, delay, distinctUntilChanged, EMPTY, map, Observable, of, startWith, switchMap, tap, throwError } from 'rxjs';
 import { Category } from 'src/models/category.model';
 
 export interface pagination{
@@ -81,12 +81,12 @@ export class CategoryService {
     ));
   
   // public methods
-  updateSearchCriteria(searchCriteria: string) {
-    this._updateState({..._state,searchCriteria})
+  updateSearchCriteria(searchCriteria: string='') {
+    this._updateState({ ..._state, searchCriteria })
   }
 
-  updatePage(page: number) {
-    this._updateState({..._state,pagination:{..._state.pagination,page}})
+  updatePagination(page = 1, pageLimit = 5) {
+    this._updateState({..._state,pagination:{..._state.pagination,page,pageLimit}})
   }
   
   //http call
@@ -94,20 +94,22 @@ export class CategoryService {
   constructor(private http:HttpClient) { 
     this.searchCriteria$.pipe(
       combineLatestWith(this.pagination$),
-      distinctUntilChanged(([prevSearch, prevPage], [newSearch, newPage]) =>
-        prevSearch === newSearch || (prevPage.page === newPage.page && prevPage.pageLimit === newPage.pageLimit && prevPage.totalPages===prevPage.totalPages) 
+      distinctUntilChanged(([prevSearch, prevPage], [newSearch, newPage]) => {
+        //console.log({ prevSearch, prevPage, newSearch, newPage });
+        return (prevSearch === newSearch && (prevPage.page === newPage.page && prevPage.pageLimit === newPage.pageLimit && prevPage.totalPages === prevPage.totalPages)
+        )
+      }
       ),
       switchMap(([searchCriteria, pagintation]) => (
         this.getCategories(searchCriteria, pagintation).pipe(
           map(categoriesResponse => {
             // new state with pagination
             const newState = this.mapCategoriesResponse(categoriesResponse);
-            // ⚠️⚠️⚠️⚠️⚠️getting error on updating state here,why???⚠️⚠️⚠️⚠️⚠️
             this._updateState(newState);
             return newState;
           }),
           catchError(error => {
-            const newState: CategoryVm = { ..._state,loading:false, error: error }
+            const newState: CategoryVm = { ..._state, loading: false, error: error }
             this._updateState(newState);
             return of(newState);
           }),
@@ -166,7 +168,7 @@ export class CategoryService {
   private _updateState = (state: CategoryVm) => {
     _state = { ...state };
     this.categoryState.next(state);
-    console.log(_state);
+   // console.log(_state);
   }
 
 }
