@@ -35,7 +35,7 @@ export class CategoryService {
 
   private apiUrl = "http://localhost:3000/categories";
   private categoryState: BehaviorSubject<CategoryVm> = new BehaviorSubject(_state);
-  public state$ = this.categoryState.asObservable();
+   state$ = this.categoryState.asObservable();
 
   private categories$ = this.state$.pipe(map(
     x => x.categories
@@ -55,7 +55,8 @@ export class CategoryService {
     distinctUntilChanged()
   );
 
-  private searchCriteria$ = this.state$.pipe(map(
+  private searchCriteria$ = this.state$.pipe(
+    map(
     x => x.searchCriteria
   ),
     distinctUntilChanged()
@@ -87,18 +88,18 @@ export class CategoryService {
           map(categoriesResponse => {
             // new state with pagination
             const newState = this.mapCategoriesResponse(categoriesResponse);
-            // ⚠️⚠️⚠️⚠️⚠️getting error on updating state here⚠️⚠️⚠️⚠️⚠️
-            //this._updateState(newState);
+            // ⚠️⚠️⚠️⚠️⚠️getting error on updating state here,why???⚠️⚠️⚠️⚠️⚠️
+            this._updateState(newState);
             return newState;
           }),
           catchError(error => {
-            const newState: CategoryVm = { ..._state, error: error }
+            const newState: CategoryVm = { ..._state,loading:false, error: error }
             this._updateState(newState);
             return of(newState);
           }),
         )
       ))
-    ).subscribe();
+    ).subscribe()
   }
 
   // getStateSnapshot() {
@@ -141,19 +142,15 @@ export class CategoryService {
     const pages = Math.ceil(totalRecords / _state.pagination.pageLimit);
     const totalPages = Array(pages).fill(0).map((x, i) => i + 1);
     const newState = {
-      ..._state, loading: false, categories: categoriesResponse.categories, pagination:
-      {
-        ..._state.pagination,
-        totalPages
-      }
+      ..._state, loading: false, categories: categoriesResponse.categories
     };
     return newState;
   }
 
   private _updateState = (state: CategoryVm) => {
-    console.log(state);
     _state = { ...state };
-    this.categoryState.next(_state);
+    this.categoryState.next(state);
+    console.log(_state);
   }
 
 }

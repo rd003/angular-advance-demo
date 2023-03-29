@@ -53,7 +53,7 @@ export class CategoryComponent implements OnInit {
       startWith(''),
       debounceTime(400));
     
-    this.vm$ = this.vm$;
+    this.vm$ = this._categoryService.state$;
   }
   
   // selectPage(page: number) {
