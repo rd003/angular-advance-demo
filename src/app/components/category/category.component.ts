@@ -151,12 +151,12 @@ export class CategoryComponent implements OnInit,OnDestroy {
       debounceTime(400),
       map(value => 
         this._categoryService.updateSearchCriteria(value)
-      )
+      ),
+      takeUntil(this.destroy$)
     ).subscribe()
    
     const pageSize$ = this.pageSize.valueChanges.pipe(
-      startWith(this.pageSize.value),
-      tap(console.log)
+      startWith(this.pageSize.value)
     )
 
    // pagination method call
